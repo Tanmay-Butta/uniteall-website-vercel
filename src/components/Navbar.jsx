@@ -6,7 +6,15 @@ import clsx from 'clsx';
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
     const location = useLocation();
+
+    useEffect(() => {
+        const onScroll = () => setScrolled(window.scrollY > 40);
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
 
     const navLinks = [
         { name: 'Home', path: '/' },
@@ -16,7 +24,16 @@ const Navbar = () => {
     ];
 
     return (
-        <nav className="fixed w-full z-50 glass border-b border-white/5 top-0 left-0 transition-colors duration-300">
+        <motion.nav
+            initial={{ y: -100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className={`fixed w-full z-50 top-0 left-0 transition-all duration-500 ${
+                scrolled
+                    ? 'glass border-b border-white/10 shadow-lg shadow-black/20 backdrop-blur-xl bg-dark-900/80'
+                    : 'bg-transparent border-b border-transparent'
+            }`}
+        >
             <div className="container mx-auto px-6 py-4">
                 <div className="flex justify-between items-center">
                     <Link to="/" className="text-2xl font-display font-bold text-white tracking-wide flex items-center gap-2">
@@ -96,7 +113,7 @@ const Navbar = () => {
                     </div>
                 </motion.div>
             )}
-        </nav>
+        </motion.nav>
     );
 };
 

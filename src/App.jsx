@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import CursorSpotlight from './components/CursorSpotlight';
+import ScrollProgress from './components/ScrollProgress';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import Features from './pages/Features';
@@ -11,6 +12,7 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen bg-dark-900 text-white flex flex-col font-sans">
+        <ScrollProgress />
         <CursorSpotlight />
         <Navbar />
         <main className="flex-grow">
