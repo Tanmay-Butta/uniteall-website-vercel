@@ -5,6 +5,8 @@ import {
   useTransform,
   useMotionValueEvent,
   AnimatePresence,
+  useMotionValue,
+  useSpring,
 } from 'framer-motion';
 import {
   EventsScreen,
@@ -15,7 +17,7 @@ import {
 } from './AppScreens';
 import {
   FaSearch, FaCalendarPlus, FaComments, FaBell, FaUserCircle,
-  FaMapMarkerAlt, FaMagic, FaPaperPlane, FaBellSlash,
+  FaMapMarkerAlt, FaMagic, FaPaperPlane, FaBellSlash, FaArrowDown,
 } from 'react-icons/fa';
 import {
   HiOutlineSparkles, HiOutlineLightningBolt, HiOutlineChat,
@@ -157,6 +159,31 @@ const PhoneShowcase = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  const [hasScrolled, setHasScrolled] = useState(false);
+  const [interacted, setInteracted] = useState(false);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const smoothX = useSpring(mouseX, { damping: 20, stiffness: 300, mass: 0.5 });
+  const smoothY = useSpring(mouseY, { damping: 20, stiffness: 300, mass: 0.5 });
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 50) {
+        setHasScrolled(true);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handlePointerMove = (e) => {
+    if (!hasScrolled) {
+      setInteracted(true);
+      mouseX.set(e.clientX);
+      mouseY.set(e.clientY);
+    }
+  };
+
   // Total scroll distance: 1 intro (1vh) + phone slide (0.5vh) + 5 stages
   // Using 750vh total for generous scroll room
   const TOTAL_VH = 800;
@@ -234,6 +261,8 @@ const PhoneShowcase = () => {
       ref={containerRef}
       className="relative"
       style={{ height: `${TOTAL_VH}vh` }}
+      onPointerMove={handlePointerMove}
+      onClick={handlePointerMove}
     >
       {/* Sticky viewport */}
       <div className="sticky top-0 left-0 w-full h-screen overflow-hidden flex items-center justify-center pt-16 pb-4">
@@ -276,6 +305,55 @@ const PhoneShowcase = () => {
             ))}
           </div>
         </motion.div>
+
+        {/* ─── DYNAMIC SCROLL HINT ─── */}
+        <AnimatePresence>
+          {interacted && !hasScrolled && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{ left: smoothX, top: smoothY, x: '-50%', y: '-50%' }}
+              className="fixed z-[100] pointer-events-none"
+            >
+              <div className="relative flex items-center justify-center w-[100px] h-[100px]">
+                {/* Expanding and rotating outer ring */}
+                <motion.svg
+                  animate={{ 
+                    scale: [0.2, 2.5],
+                    rotate: [0, 90],
+                    opacity: [0.8, 0]
+                  }}
+                  transition={{ 
+                    duration: 4, 
+                    repeat: Infinity, 
+                    ease: 'linear'
+                  }}
+                  className="absolute inset-0 w-full h-full text-primary-400 origin-center pointer-events-none"
+                  viewBox="0 0 100 100"
+                  style={{ overflow: 'visible' }}
+                >
+                  <circle 
+                    cx="50" cy="50" r="48" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="1.5" 
+                    strokeDasharray="4 8" 
+                    vectorEffect="non-scaling-stroke"
+                  />
+                </motion.svg>
+                
+                {/* Static Center Text and arrow */}
+                <div className="flex flex-col items-center justify-center z-10 text-white mt-1 pointer-events-none">
+                  <span className="font-display font-bold uppercase tracking-[0.3em] text-[8px] mb-0.5 text-white drop-shadow-md">Scroll</span>
+                  <motion.div animate={{ y: [0, 4, 0] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}>
+                    <FaArrowDown size={12} className="text-primary-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.8)]" />
+                  </motion.div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* ─── LEFT SIDE / OVERLAY CONTENT ─── */}
         <div className="absolute top-16 md:inset-y-0 md:top-0 left-0 w-full md:w-[50%] lg:w-[55%] flex items-start md:items-center justify-center md:justify-start z-20 pointer-events-none">
